@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AccessPath Legacy Backend</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f8fafc; --surface: #fff; --text: #0f172a; --muted: #64748b;
+      --border: #e2e8f0; --accent: #4f46e5; --accent-light: #eef2ff;
+      --get: #0369a1; --post: #15803d; --patch: #a16207; --delete: #b91c1c;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --bg: #0b1020; --surface: #121a2e; --text: #e2e8f0; --muted: #94a3b8;
+        --border: #24304a; --accent: #a5b4fc; --accent-light: #1e2547;
+        --get: #7dd3fc; --post: #86efac; --patch: #fde68a; --delete: #fca5a5;
+      }
+    }
+    :root[data-theme="dark"] {
+      --bg: #0b1020; --surface: #121a2e; --text: #e2e8f0; --muted: #94a3b8;
+      --border: #24304a; --accent: #a5b4fc; --accent-light: #1e2547;
+      --get: #7dd3fc; --post: #86efac; --patch: #fde68a; --delete: #fca5a5;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.6 Inter, system-ui, sans-serif; }
+    main { max-width: 920px; margin: 0 auto; padding: 48px 16px 80px; }
+    h1 { font-size: 30px; margin: 0 0 8px; letter-spacing: -0.02em; }
+    h2 { font-size: 19px; margin: 44px 0 12px; }
+    p { margin: 0 0 12px; }
+    .lede { color: var(--muted); font-size: 16px; max-width: 680px; }
+    .tag { display: inline-block; font-size: 12px; font-weight: 600; color: var(--accent); background: var(--accent-light); padding: 2px 10px; border-radius: 999px; margin-bottom: 14px; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-top: 28px; }
+    .card { display: block; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px; color: inherit; text-decoration: none; }
+    .card:hover { border-color: var(--accent); }
+    .card b { display: block; margin-bottom: 4px; }
+    .card span { color: var(--muted); font-size: 14px; }
+    table { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; font-size: 14px; }
+    th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    th { color: var(--muted); font-weight: 500; font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; }
+    tr:last-child td { border-bottom: 0; }
+    code, .mono { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 13px; }
+    .m { font-family: "JetBrains Mono", monospace; font-size: 12px; font-weight: 600; }
+    .GET { color: var(--get); } .POST { color: var(--post); } .PATCH { color: var(--patch); } .DELETE { color: var(--delete); }
+    .scroll { overflow-x: auto; }
+    ul { padding-left: 20px; margin: 0; } li { margin-bottom: 8px; }
+    .flow { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 14px; }
+    .flow span { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; }
+    .flow i { color: var(--muted); font-style: normal; }
+    footer { margin-top: 56px; color: var(--muted); font-size: 13px; }
+  </style>
+</head>
+<body>
+<main>
+  <div class="tag">Legacy · Spring 2026 · reference only</div>
+  <h1>AccessPath: the original backend</h1>
+  <p class="lede">This is the first version of AccessPath, built with FastAPI and Postgres. It's posted here so the frontend team can see the API shapes, the review workflow, and the old UI prototype. The new Django backend replaces it. Use this for ideas, not as the contract.</p>
+
+  <div class="cards">
+    <a class="card" href="prototype/"><b>Clickable UI prototype →</b><span>Dashboard, review queue, upload, courses, activity. It runs on mock data, so no backend is needed.</span></a>
+    <a class="card" href="api.html"><b>API reference →</b><span>All 18 endpoints with request and response schemas (Swagger, read-only).</span></a>
+    <a class="card" href="openapi.json"><b>openapi.json →</b><span>The raw spec. Feed it to a codegen tool or a mock server.</span></a>
+  </div>
+
+  <h2>How a document moves through it</h2>
+  <div class="flow">
+    <span>Upload PDF / HTML / URL</span><i>→</i>
+    <span>Split into elements</span><i>→</i>
+    <span>AI drafts accessible version</span><i>→</i>
+    <span>TA / prof approve or reject</span><i>→</i>
+    <span>Export accessible course</span>
+  </div>
+
+  <h2>Data model</h2>
+  <div class="scroll"><table>
+    <tr><th>Table</th><th>What it holds</th><th>Frontend note</th></tr>
+    <tr><td><b>Course</b></td><td>code, name, term, owner</td><td>Top-level nav item</td></tr>
+    <tr><td><b>Artifact</b></td><td>One uploaded file (lecture, problem set)</td><td>Shown as “lectures” in the prototype</td></tr>
+    <tr><td><b>Element</b></td><td>A figure, equation, table or text block. Can nest (parent/children).</td><td>The unit people review. Render it as a tree or a list.</td></tr>
+    <tr><td><b>ElementVersion</b></td><td>The AI or human output for an element. <b>Append-only</b>: an edit creates a new version.</td><td>Version history timeline. Never edit in place.</td></tr>
+    <tr><td><b>Review</b></td><td>approved / rejected + comment, on a specific version</td><td>Approve/reject buttons post here</td></tr>
+    <tr><td><b>Assignment</b></td><td>Which reviewer owns an element</td><td>“Assigned to me” filter</td></tr>
+    <tr><td><b>User</b></td><td>Hardcoded: instructor, ta, observer (no real auth)</td><td>Role switcher in the prototype</td></tr>
+  </table></div>
+
+  <h2>Endpoints</h2>
+  <div class="scroll"><table id="endpoints">
+    <tr><th>Method</th><th>Path</th><th>Does</th></tr>
+  </table></div>
+
+  <h2>Ideas worth carrying into the new frontend</h2>
+  <ul>
+    <li><b>Review queue as the home screen.</b> Most TA time goes there. Show confidence, element type and flagged status at a glance.</li>
+    <li><b>Side-by-side review.</b> Put the original element (image crop or snippet) next to the AI's draft, with approve/reject/edit right there (see <code>NodeDetailPanel.jsx</code>).</li>
+    <li><b>Version timeline.</b> Since versions are immutable, show “AI generated → TA edited → Prof approved” as a history list.</li>
+    <li><b>Confidence badges.</b> Sort or filter by AI confidence so low-confidence items get human eyes first.</li>
+    <li><b>Per-lecture progress bars.</b> Approved / total / flagged per artifact on the dashboard.</li>
+    <li><b>Optimistic UI.</b> The prototype updates the screen right away and falls back to mock data if the API fails. That's handy while the backend is still being built.</li>
+  </ul>
+
+  <footer>The API spec was generated from the original FastAPI code. The prototype's <code>api.js</code> points at <code>localhost:8000</code>, and when that isn't reachable the screens fall back to the sample data in <code>AppData.jsx</code>.</footer>
+</main>
+<script>
+  fetch("openapi.json").then(r => r.json()).then(spec => {
+    const t = document.getElementById("endpoints");
+    for (const [path, ops] of Object.entries(spec.paths)) {
+      for (const [method, op] of Object.entries(ops)) {
+        const tr = document.createElement("tr");
+        const M = method.toUpperCase();
+        tr.innerHTML = `<td class="m ${M}">${M}</td><td class="mono"></td><td></td>`;
+        tr.children[1].textContent = path;
+        tr.children[2].textContent = op.summary || "";
+        t.appendChild(tr);
+      }
+    }
+  }).catch(() => {});
+</script>
+</body>
+</html>

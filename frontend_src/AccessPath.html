@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AccessPath — Course Accessibility Pipeline</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body, #root { height: 100%; }
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      -webkit-font-smoothing: antialiased;
+
+      --accent:        #4f46e5;
+      --accent-light:  #eef2ff;
+      --accent-border: #c7d2fe;
+      --accent-dark:   #4338ca;
+      --accent-fg:     #ffffff;
+
+      --bg:            #f8fafc;
+      --surface:       #ffffff;
+      --sidebar-bg:    #ffffff;
+      --hover-bg:      #f1f5f9;
+      --border:        #e2e8f0;
+      --border-strong: #cbd5e1;
+
+      --fg:            #0f172a;
+      --fg-muted:      #64748b;
+      --fg-subtle:     #94a3b8;
+
+      --tag-bg:  #f1f5f9;
+      --tag-fg:  #475569;
+
+      --status-approved-bg:  #f0fdf4; --status-approved-fg: #15803d; --status-approved-border: #bbf7d0;
+      --status-pending-bg:   #fffbeb; --status-pending-fg:  #b45309; --status-pending-border:  #fde68a;
+      --status-review-bg:    #eff6ff; --status-review-fg:   #1d4ed8; --status-review-border:   #bfdbfe;
+      --status-rejected-bg:  #fef2f2; --status-rejected-fg: #b91c1c; --status-rejected-border: #fecaca;
+      --status-ai-bg:        #f5f3ff; --status-ai-fg:       #6d28d9; --status-ai-border:       #ddd6fe;
+
+      --mono: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
+
+      background: var(--bg);
+      color: var(--fg);
+    }
+
+    body.dark {
+      --accent:        #6366f1;
+      --accent-light:  #1e1b4b;
+      --accent-border: #3730a3;
+      --accent-dark:   #818cf8;
+      --accent-fg:     #ffffff;
+
+      --bg:            #0b0f1a;
+      --surface:       #131929;
+      --sidebar-bg:    #0f1520;
+      --hover-bg:      #1e2a3a;
+      --border:        #1e2a3a;
+      --border-strong: #2d3f55;
+
+      --fg:            #f1f5f9;
+      --fg-muted:      #94a3b8;
+      --fg-subtle:     #475569;
+
+      --tag-bg:  #1e2a3a;
+      --tag-fg:  #94a3b8;
+
+      --status-approved-bg:  #052e16; --status-approved-fg: #4ade80; --status-approved-border: #166534;
+      --status-pending-bg:   #1c1007; --status-pending-fg:  #fbbf24; --status-pending-border:  #78350f;
+      --status-review-bg:    #0c1a3a; --status-review-fg:   #60a5fa; --status-review-border:   #1e3a8a;
+      --status-rejected-bg:  #1f0707; --status-rejected-fg: #f87171; --status-rejected-border: #7f1d1d;
+      --status-ai-bg:        #1a0e2e; --status-ai-fg:       #c4b5fd; --status-ai-border:       #4c1d95;
+    }
+
+    body:not(.dark)[data-uni="purdue"]  { --accent:#cfb991; --accent-light:#fdf8ec; --accent-border:#e8d69a; --accent-dark:#b8a070; --accent-fg:#111827; }
+    body:not(.dark)[data-uni="cornell"] { --accent:#b91c1c; --accent-light:#fee2e2; --accent-border:#fca5a5; --accent-dark:#991b1b; --accent-fg:#ffffff; }
+    body:not(.dark)[data-uni="msu"]     { --accent:#18453b; --accent-light:#dcfce7; --accent-border:#86efac; --accent-dark:#103028; --accent-fg:#ffffff; }
+    body:not(.dark)[data-uni="nyu"]     { --accent:#57068c; --accent-light:#f3e8ff; --accent-border:#d8b4fe; --accent-dark:#3b0764; --accent-fg:#ffffff; }
+    body:not(.dark)[data-uni="ut"]      { --accent:#bf5700; --accent-light:#ffedd5; --accent-border:#fdba74; --accent-dark:#9a3412; --accent-fg:#ffffff; }
+    body.dark[data-uni="purdue"]  { --accent:#e8d4a0; --accent-light:#2a2410; --accent-border:#7a6425; --accent-dark:#cfb991; --accent-fg:#111827; }
+    body.dark[data-uni="cornell"] { --accent:#f87171; --accent-light:#1f0707; --accent-border:#7f1d1d; --accent-dark:#fca5a5; --accent-fg:#111827; }
+    body.dark[data-uni="msu"]     { --accent:#4ade80; --accent-light:#052e16; --accent-border:#166534; --accent-dark:#86efac; --accent-fg:#111827; }
+    body.dark[data-uni="nyu"]     { --accent:#c4b5fd; --accent-light:#1a0e2e; --accent-border:#4c1d95; --accent-dark:#ddd6fe; --accent-fg:#111827; }
+    body.dark[data-uni="ut"]      { --accent:#fb923c; --accent-light:#3b1a07; --accent-border:#9a3412; --accent-dark:#fdba74; --accent-fg:#111827; }
+
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
+  </style>
+</head>
+<body style="background-color: rgb(66, 69, 73)">
+<div id="root"></div>
+
+<script type="text/babel" src="Components.jsx"></script>
+<script type="text/babel" src="Primitives.jsx"></script>
+<script type="text/babel" src="AppData.jsx"></script>
+<script type="text/babel" src="NodeDetailPanel.jsx"></script>
+<script type="text/babel" src="DashboardScreen.jsx"></script>
+<script type="text/babel" src="ReviewQueueScreen.jsx"></script>
+<script type="text/babel" src="UploadScreen.jsx"></script>
+<script type="text/babel" src="ActivityScreen.jsx"></script>
+<script type="text/babel" src="SettingsScreen.jsx"></script>
+<script type="text/babel" src="CoursesScreen.jsx"></script>
+
+<script src="api.js"></script>
+<script type="text/babel">
+const { useState, useEffect, useCallback } = React;
+
+const USERS = {
+  instructor: { email: "prof@example.com",        role: "instructor", initials: "PD", name: "Prof. Doubert" },
+  ta:         { email: "ta@example.com",           role: "ta",         initials: "TA", name: "TA User" },
+  observer:   { email: "observer@example.com",     role: "observer",   initials: "OB", name: "Observer" },
+};
+
+const UNIS = [
+  { id: "default", label: "Indigo",    color: "#4f46e5", fg: "#fff" },
+  { id: "purdue",  label: "Purdue",    color: "#cfb991", fg: "#111" },
+  { id: "cornell", label: "Cornell",   color: "#b91c1c", fg: "#fff" },
+  { id: "msu",     label: "Mich. St.", color: "#18453b", fg: "#fff" },
+  { id: "nyu",     label: "NYU",       color: "#57068c", fg: "#fff" },
+  { id: "ut",      label: "UT Austin", color: "#bf5700", fg: "#fff" },
+];
+
+const ThemeBar = ({ uni, setUni, dark, setDark }) => (
+  <div style={{
+    display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 10,
+    padding: "4px 16px", borderBottom: "1px solid var(--border)",
+    background: "var(--surface)", flexShrink: 0,
+  }}>
+    <span style={{ fontSize: 11, color: "var(--fg-subtle)", fontWeight: 500 }}>University accent:</span>
+    <div style={{ display: "flex", gap: 4 }}>
+      {UNIS.map(u => (
+        <button key={u.id} onClick={() => setUni(u.id)} title={u.label}
+          style={{ width: 16, height: 16, borderRadius: "50%", background: u.color, border: `2px solid ${uni === u.id ? "var(--fg)" : "transparent"}`, cursor: "pointer", padding: 0, transition: "border-color 150ms" }}
+        />
+      ))}
+    </div>
+    <div style={{ width: 1, height: 14, background: "var(--border)" }} />
+    <button onClick={() => setDark(d => !d)} style={{
+      display: "flex", alignItems: "center", gap: 5, padding: "2px 9px", borderRadius: 5,
+      border: "1px solid var(--border)", background: "var(--hover-bg)",
+      color: "var(--fg-muted)", fontSize: 11, fontWeight: 500, cursor: "pointer", fontFamily: "inherit",
+    }}>
+      <Icon name={dark ? "sun" : "moon"} size={11} color="var(--fg-muted)" />
+      {dark ? "Light" : "Dark"}
+    </button>
+  </div>
+);
+
+const LoginScreen = ({ onLogin }) => {
+  const [selected, setSelected] = useState("instructor");
+  return (
+    <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", background: "var(--bg)" }}>
+      <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 12, padding: 36, width: 400, boxShadow: "0 10px 30px rgba(0,0,0,0.1)" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 28 }}>
+          <div style={{ width: 38, height: 38, background: "var(--accent)", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <Icon name="layers" size={18} color="var(--accent-fg)" />
+          </div>
+          <div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: "var(--fg)" }}>AccessPath</div>
+            <div style={{ fontSize: 11.5, color: "var(--fg-subtle)" }}>Course Accessibility Pipeline</div>
+          </div>
+        </div>
+
+        <div style={{ fontSize: 17, fontWeight: 700, color: "var(--fg)", marginBottom: 4 }}>Sign in</div>
+        <div style={{ fontSize: 13, color: "var(--fg-muted)", marginBottom: 20 }}>Choose a role to preview the interface</div>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 24 }}>
+          {Object.entries(USERS).map(([key, u]) => (
+            <div key={key} onClick={() => setSelected(key)} style={{
+              display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 8, cursor: "pointer",
+              border: `1.5px solid ${selected === key ? "var(--accent)" : "var(--border)"}`,
+              background: selected === key ? "var(--accent-light)" : "var(--surface)",
+              transition: "border-color 150ms, background 150ms",
+            }}>
+              <div style={{ width: 34, height: 34, borderRadius: "50%", background: selected === key ? "var(--accent)" : "var(--hover-bg)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, color: selected === key ? "var(--accent-fg)" : "var(--fg-muted)", transition: "all 150ms" }}>
+                {u.initials}
+              </div>
+              <div>
+                <div style={{ fontSize: 13.5, fontWeight: 500, color: "var(--fg)" }}>{u.name}</div>
+                <div style={{ fontSize: 11.5, color: "var(--fg-subtle)", textTransform: "capitalize" }}>{u.role} · {u.email}</div>
+              </div>
+              {selected === key && <div style={{ marginLeft: "auto" }}><Icon name="check" size={16} color="var(--accent)" /></div>}
+            </div>
+          ))}
+        </div>
+
+        <Button onClick={() => onLogin(USERS[selected])} size="lg">
+          Continue as {USERS[selected].role}
+        </Button>
+
+        <div style={{ marginTop: 14, padding: "10px 12px", background: "var(--hover-bg)", borderRadius: 6, border: "1px solid var(--border)" }}>
+          <div style={{ fontSize: 11.5, color: "var(--fg-muted)", lineHeight: 1.5 }}>
+            <strong style={{ color: "var(--fg-subtle)" }}>Demo mode.</strong> Sample data for ME 274 — Engineering Dynamics. Tap any role to compare permissions.
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const now = () => new Date().toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+
+const App = () => {
+  const [user, setUser]         = useState(null);
+  const [view, setView]         = useState("courses");
+  const [activeCourse, setActiveCourse] = useState(null);
+  const [uni, setUni]           = useState("default");
+  const [dark, setDark]         = useState(false);
+  const [nodes, setNodes]       = useState([]);
+  const [lectures, setLectures] = useState([]);
+  const [courses, setCourses]   = useState([]);
+  const [loadingNodes, setLoadingNodes] = useState(false);
+  const [selectedNodeId, setSelectedNodeId] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const toast = useToast ? useToast() : { success: () => {}, error: () => {} };
+
+  useEffect(() => {
+    document.body.setAttribute("data-uni", uni);
+    document.body.classList.toggle("dark", dark);
+  }, [uni, dark]);
+
+  // Load courses when user logs in
+  useEffect(() => {
+    if (!user) return;
+    api.listCourses().then(setCourses).catch(() => {});
+  }, [user]);
+
+  // Load nodes + lectures when active course changes OR after a new upload
+  useEffect(() => {
+    if (!activeCourse) { setNodes([]); setLectures([]); return; }
+    // refreshKey changes after every upload, forcing a reload
+    setLoadingNodes(true);
+    api.listArtifacts(activeCourse)
+      .then(async artifacts => {
+        const lecs = artifacts.map(a => ({
+          id: a.id,
+          name: a.filename,
+          total: 0, approved: 0, flagged: 0,
+        }));
+        setLectures(lecs);
+
+        const elementArrays = await Promise.all(artifacts.map(a => api.getArtifactElements(a.id)));
+        const allElements = elementArrays.flat();
+        const adapted = allElements.map(adaptElement);
+
+        // Merge version details for confidence/output
+        const withVersions = await Promise.all(adapted.map(async node => {
+          if (!node._latestVersionId) return node;
+          try {
+            const ver = await api.getElementVersion(node._latestVersionId);
+            return mergeVersion(node, ver);
+          } catch { return node; }
+        }));
+
+        setNodes(withVersions);
+
+        // Update lecture totals
+        setLectures(lecs.map(l => {
+          const lnodes = withVersions.filter(n => n.lectureId === l.id);
+          return { ...l, total: lnodes.length, approved: lnodes.filter(n => n.stage === "approved").length, flagged: lnodes.filter(n => n.stage === "flagged").length };
+        }));
+      })
+      .catch(() => { setNodes([]); setLectures([]); })
+      .finally(() => setLoadingNodes(false));
+  }, [activeCourse, refreshKey]);
+
+  const flagCount = nodes.filter(n => n.stage === "flagged" || n.stage === "in-review" || n.stage === "ai-generated").length;
+
+  const handleApprove = async (id) => {
+    const node = nodes.find(n => n.id === id);
+    const at = now();
+    setNodes(ns => ns.map(n => n.id === id ? {
+      ...n, stage: "approved",
+      approvalChain: [...(n.approvalChain||[]), { role: user.role === "instructor" ? "Instructor" : "TA", email: user.email, action: "Approved", at }],
+      editHistory: [...(n.editHistory||[]), { by: user.email, label: "Approved", note: "", at }],
+    } : n));
+    if (node?._latestVersionId) {
+      try { await api.approveVersion(node._latestVersionId, user.email); }
+      catch { toast.error("Approve saved locally — API error."); }
+    }
+  };
+
+  const handleFlag = async (id) => {
+    const node = nodes.find(n => n.id === id);
+    const at = now();
+    setNodes(ns => ns.map(n => n.id === id ? {
+      ...n, stage: "flagged", flagReason: n.flagReason || "Flagged for review",
+      editHistory: [...(n.editHistory||[]), { by: user.email, label: "Flagged", note: "Flagged by reviewer", at }],
+    } : n));
+    if (node?._latestVersionId) {
+      try { await api.rejectVersion(node._latestVersionId, user.email, "Flagged for review"); }
+      catch { toast.error("Flag saved locally — API error."); }
+    }
+  };
+
+  const handleRegenerate = (id) => {
+    const at = now();
+    setNodes(ns => ns.map(n => n.id === id ? {
+      ...n, stage: "ai-generated", confidence: Math.floor(Math.random() * 15) + 85, flagReason: null,
+      editHistory: [...(n.editHistory||[]), { by: "ai", label: "Regenerated", note: `${n.model} · requested by ${user.email}`, at }],
+    } : n));
+  };
+
+  const handleAddComment = async (nodeId, text) => {
+    const node = nodes.find(n => n.id === nodeId);
+    const at = now();
+    setNodes(ns => ns.map(n => n.id === nodeId
+      ? { ...n, comments: [...(n.comments||[]), { author: user.email, text, at }] }
+      : n));
+    if (node?._latestVersionId) {
+      try { await api.submitReview(node._latestVersionId, { reviewer_id: USER_IDS[user.email], decision: "approved", comment: text }); }
+      catch { /* comment saved locally */ }
+    }
+  };
+
+  const handleSaveEdit = async (id, newOutput) => {
+    const node = nodes.find(n => n.id === id);
+    const at = now();
+    setNodes(ns => ns.map(n => n.id === id ? {
+      ...n, aiOutput: newOutput, updatedAt: at,
+      editHistory: [...(n.editHistory||[]), { by: user.email, label: "Edited", note: `New version saved (${newOutput.length} chars)`, at }],
+    } : n));
+    if (node?._elementId) {
+      try {
+        const newVer = await api.saveEditedOutput(node._elementId, newOutput, node.model, node.confidence);
+        setNodes(ns => ns.map(n => n.id === id ? { ...n, _latestVersionId: newVer.id } : n));
+      } catch { toast.error("Edit saved locally — API error."); }
+    }
+  };
+
+  const handleAssign = (id, email) => {
+    const at = now();
+    setNodes(ns => ns.map(n => n.id === id ? {
+      ...n, assignee: email,
+      editHistory: [...(n.editHistory||[]), { by: user.email, label: email ? "Assigned" : "Unassigned", note: email ? `Assigned to ${email.split("@")[0]}` : "Cleared assignee", at }],
+    } : n));
+  };
+
+  const handleCreateCourse = (course) => {
+    setCourses(cs => [course, ...cs]);
+  };
+
+  const handleDeleteCourse = async (courseId) => {
+    if (!window.confirm("Delete this course and all its content? This cannot be undone.")) return;
+    try {
+      await api.deleteCourse(courseId);
+      setCourses(cs => cs.filter(c => c.id !== courseId));
+      if (activeCourse === courseId) { setActiveCourse(null); setView("courses"); }
+      toast.success("Course deleted");
+    } catch { toast.error("Failed to delete course"); }
+  };
+
+  const handleDeleteArtifact = async (artifactId) => {
+    if (!window.confirm("Delete this upload and all its nodes? This cannot be undone.")) return;
+    try {
+      await api.deleteArtifact(artifactId);
+      setNodes(ns => ns.filter(n => n.lectureId !== artifactId));
+      setLectures(ls => ls.filter(l => l.id !== artifactId));
+      toast.success("Upload deleted");
+    } catch { toast.error("Failed to delete upload"); }
+  };
+
+  const handleDeleteNode = async (nodeId) => {
+    if (!window.confirm("Delete this node permanently?")) return;
+    const node = nodes.find(n => n.id === nodeId);
+    try {
+      if (node?._elementId) await api.deleteElement(node._elementId);
+      setNodes(ns => ns.filter(n => n.id !== nodeId));
+      if (selectedNodeId === nodeId) setSelectedNodeId(null);
+      toast.success("Node deleted");
+    } catch { toast.error("Failed to delete node"); }
+  };
+
+  const sharedProps = {
+    nodes, selectedNodeId, setSelectedNodeId,
+    onApprove: handleApprove, onFlag: handleFlag,
+    onAddComment: handleAddComment, onSaveEdit: handleSaveEdit, onAssign: handleAssign,
+    onDeleteNode: handleDeleteNode,
+  };
+
+  const renderScreen = () => {
+    if (view === "courses") return <CoursesScreen courses={courses} onCreateCourse={handleCreateCourse} setActiveCourse={setActiveCourse} setView={setView} />;
+    switch (view) {
+      case "dashboard": return <DashboardScreen {...sharedProps} lectures={lectures} loading={loadingNodes} activeCourse={activeCourse} onDeleteArtifact={handleDeleteArtifact} />;
+      case "review":    return <ReviewQueueScreen {...sharedProps} />;
+      case "upload":    return <UploadScreen activeCourse={activeCourse} setActiveCourse={setActiveCourse} courses={courses} onIngestDone={() => { setRefreshKey(k => k + 1); setView("dashboard"); }} />;
+      case "activity":  return <ActivityScreen nodes={nodes} />;
+      case "settings":  return <SettingsScreen user={user} dark={dark} setDark={setDark} uni={uni} setUni={setUni} activeCourse={activeCourse} onDeleteCourse={handleDeleteCourse} />;
+      default:          return <DashboardScreen {...sharedProps} lectures={lectures} loading={loadingNodes} />;
+    }
+  };
+
+  return (
+    <ToastProvider>
+      <div style={{ height: "100%", display: "flex", flexDirection: "column" }}>
+        <ThemeBar uni={uni} setUni={setUni} dark={dark} setDark={setDark} />
+        {!user
+          ? <LoginScreen onLogin={setUser} />
+          : (
+            <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
+              <Sidebar
+                active={view}
+                setActive={v => { setView(v); setSelectedNodeId(null); }}
+                activeCourse={activeCourse}
+                setActiveCourse={setActiveCourse}
+                user={user}
+                flagCount={flagCount}
+                courses={courses}
+                onDeleteCourse={handleDeleteCourse}
+              />
+              <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", background: "var(--bg)" }}>
+                {renderScreen()}
+              </div>
+            </div>
+          )
+        }
+      </div>
+    </ToastProvider>
+  );
+};
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
